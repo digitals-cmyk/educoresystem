@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // A user is a super admin if their auth uid is stored with role = SUPER_ADMIN
+    // For simplicity, we are checking the users document.
+    function isSuperAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SUPER_ADMIN';
+    }
+
+    // A user is a school admin for THIS schoolId
+    function isSchoolAdmin(schoolId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SCHOOL_ADMIN' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == schoolId;
+    }
+
+    // General school user check
+    function isSchoolUser(schoolId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == schoolId;
+    }
+
+    match /users/{userId} {
+      // Super admins can do everything globally.
+      // Users can read themselves.
+      // School admins can create/read users in their own school.
+      allow read: if isSuperAdmin() || request.auth.uid == userId || (isSignedIn() && existing().schoolId != null && isSchoolAdmin(existing().schoolId));
+      allow create: if isSuperAdmin() || (isSignedIn() && incoming().schoolId != null && isSchoolAdmin(incoming().schoolId));
+      allow update: if isSuperAdmin() || request.auth.uid == userId || (isSignedIn() && existing().schoolId != null && isSchoolAdmin(existing().schoolId));
+      allow delete: if isSuperAdmin() || (isSignedIn() && existing().schoolId != null && isSchoolAdmin(existing().schoolId));
+    }
+
+    match /schools/{schoolId} {
+      // Super Admin read/write
+      allow create: if isSuperAdmin();
+      allow update, delete: if isSuperAdmin();
+      // School Admin read/update
+      allow update: if isSchoolAdmin(schoolId);
+      // All users in the school can read
+      allow read: if isSuperAdmin() || isSchoolUser(schoolId);
+    }
+    
+    match /schools/{schoolId}/{subcollection}/{docId} {
+      // Anyone in school can read (simplify for now, real app would restrict Student/Fee data)
+      allow read: if isSuperAdmin() || isSchoolUser(schoolId);
+      // School admins can manage
+      allow write: if isSuperAdmin() || isSchoolAdmin(schoolId);
+    }
+  }
+}

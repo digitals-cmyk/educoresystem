@@ -1,0 +1,6 @@
+{
+  "name": "EduCore Multi-School Management System",
+  "description": "Multi-tenant school management software to handle multiple schools with Super Admin, School Admin, Teacher, and Student roles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

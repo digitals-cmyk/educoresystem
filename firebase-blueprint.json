@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System access user entity (Super Admin, School Admin, etc.)",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "STUDENT", "PARENT", "STAFF"] },
+        "schoolId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
+        "forcePasswordChange": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["role", "name", "email"]
+    },
+    "School": {
+      "title": "School",
+      "description": "A registered school within the system",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "address": { "type": "string" },
+        "email": { "type": "string" },
+        "principalName": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
+        "createdAt": { "type": "number" },
+        "adminId": { "type": "string" }
+      },
+      "required": ["name", "code", "email", "status"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student record within a school",
+      "type": "object",
+      "properties": {
+        "admissionNumber": { "type": "string" },
+        "name": { "type": "string" },
+        "dob": { "type": "string" },
+        "dateOfAdmission": { "type": "string" },
+        "assessmentNumber": { "type": "string", "description": "Used in Kenya for exams" },
+        "grade": { "type": "string" },
+        "stream": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["admissionNumber", "name", "grade"]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Exam definition within a school",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "term": { "type": "string" },
+        "year": { "type": "string" },
+        "status": { "type": "string", "enum": ["PUBLISHED", "UNPUBLISHED"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["name", "term", "year"]
+    },
+    "ExamResult": {
+      "title": "ExamResult",
+      "description": "Marks for a student in an exam",
+      "type": "object",
+      "properties": {
+        "examId": { "type": "string" },
+        "subject": { "type": "string" },
+        "studentId": { "type": "string" },
+        "score": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["examId", "subject", "studentId", "score"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": { "$ref": "User" },
+      "description": "Global user accounts, mapped by auth UID"
+    },
+    "schools": {
+      "schema": { "$ref": "School" },
+      "description": "All registered schools"
+    },
+    "schools/{schoolId}/students": {
+      "schema": { "$ref": "Student" },
+      "description": "Students belonging to a specific school"
+    },
+    "schools/{schoolId}/exams": {
+      "schema": { "$ref": "Exam" },
+      "description": "Exams for a specific school"
+    },
+    "schools/{schoolId}/results": {
+      "schema": { "$ref": "ExamResult" },
+      "description": "Exam results for students"
+    }
+  }
+}
