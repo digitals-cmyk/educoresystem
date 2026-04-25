@@ -41,10 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfile(docSnap.data() as UserProfile);
           } else {
             // Seed super admin dynamically if it's the specific email
-            if (firebaseUser.email === 'admin@pro.com') {
+            if (firebaseUser.email === 'admin@pro.com' || firebaseUser.email === 'johnkimeujk6@gmail.com') {
               const newProfile: UserProfile = {
                 role: 'SUPER_ADMIN',
-                name: 'Super Admin',
+                name: firebaseUser.displayName || 'Super Admin',
                 email: firebaseUser.email,
                 status: 'ACTIVE',
               };

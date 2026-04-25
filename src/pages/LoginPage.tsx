@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth-context';
@@ -29,11 +29,16 @@ export function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
       // Let the auth listener handle redirection to protected routes
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Invalid login details');
+      if (err.message?.includes('network-request-failed')) {
+        setError('Network request failed. Please check your connection or disable ad-blockers. If using AI Studio, try opening the app in a new tab.');
+      } else {
+        setError(err.message || 'Invalid login details');
+      }
       setLoading(false);
     }
   };
@@ -72,75 +77,42 @@ export function LoginPage() {
         )}
 
         {!isReset ? (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2 opacity-60">Email or Username</label>
-              <div className="relative">
-                <AtSign className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all font-medium text-sm"
-                  placeholder="admin@pro.com"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 opacity-60">Password</label>
-                <button type="button" onClick={() => setIsReset(true)} className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700">Forgot Password?</button>
-              </div>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all font-medium text-sm"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
+          <div className="space-y-4">
             <button
               disabled={loading}
-              type="submit"
+              onClick={handleLogin}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-4 rounded-full transition-colors flex justify-center mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Log In'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Log In With Google'}
             </button>
             <p className="text-xs text-center text-gray-500 mt-4 leading-relaxed">
-              If this is your first time logging in, please use the credentials provided to you. By logging in, you agree to the Terms of Service. Note: For the Super Admin account, use Email/Password Authentication in Firebase.
+              By logging in, you agree to the Terms of Service.
             </p>
-          </form>
+          </div>
         ) : (
           <form onSubmit={handleReset} className="space-y-4">
-             <div className="mb-4">
-              <button type="button" onClick={() => setIsReset(false)} className="text-sm text-gray-600 flex items-center hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back to Login
+             <div className="mb-6">
+              <button type="button" onClick={() => setIsReset(false)} className="text-[10px] uppercase font-bold tracking-widest text-slate-500 flex items-center hover:text-slate-900 transition-colors">
+                <ArrowLeft className="w-3 h-3 mr-2" /> Back to Login
               </button>
             </div>
             
             {resetSent ? (
-               <div className="bg-green-50 text-green-700 p-4 rounded-lg text-sm text-center">
-                 Password reset email sent! Please check your inbox and follow the instructions.
+               <div className="bg-green-50 text-green-700 p-4 rounded-xl text-xs font-bold uppercase tracking-wider text-center border border-green-100">
+                 Password reset email sent! Please check your inbox.
                </div>
             ) : (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Registered Email</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2 opacity-60">Registered Email</label>
                   <div className="relative">
-                    <AtSign className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <AtSign className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all"
+                      className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all font-medium text-sm"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -149,7 +121,7 @@ export function LoginPage() {
                 <button
                   disabled={loading}
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex justify-center mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-4 rounded-full transition-colors flex justify-center mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Reset Link'}
                 </button>
