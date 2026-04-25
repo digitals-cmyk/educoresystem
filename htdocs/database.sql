@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS educore_db;
-USE educore_db;
-
 CREATE TABLE schools (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,

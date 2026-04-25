@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth-context';
@@ -29,8 +29,7 @@ export function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithEmailAndPassword(auth, email, password);
       // Let the auth listener handle redirection to protected routes
     } catch (err: any) {
       console.error(err);
@@ -77,18 +76,51 @@ export function LoginPage() {
         )}
 
         {!isReset ? (
-          <div className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2 opacity-60">Email or Username</label>
+              <div className="relative">
+                <AtSign className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all font-medium text-sm"
+                  placeholder="admin@pro.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 opacity-60">Password</label>
+                <button type="button" onClick={() => setIsReset(true)} className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 hover:text-indigo-700">Forgot Password?</button>
+              </div>
+              <div className="relative">
+                <Lock className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all font-medium text-sm"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
             <button
               disabled={loading}
-              onClick={handleLogin}
+              type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-widest py-4 rounded-full transition-colors flex justify-center mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Log In With Google'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Log In'}
             </button>
             <p className="text-xs text-center text-gray-500 mt-4 leading-relaxed">
-              By logging in, you agree to the Terms of Service.
+              If this is your first time logging in, please use the credentials provided to you. By logging in, you agree to the Terms of Service.
             </p>
-          </div>
+          </form>
         ) : (
           <form onSubmit={handleReset} className="space-y-4">
              <div className="mb-6">
